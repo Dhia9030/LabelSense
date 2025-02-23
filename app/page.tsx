@@ -118,18 +118,15 @@ export default function DefectDetector() {
     setTotalAnalyzed((prev) => prev + 1)
 
     setStats((prev) => {
-      const newStats = [...prev]
       const type1Count = newDetections.filter((d) => d.class === 1).length
       const type2Count = newDetections.filter((d) => d.class === 2).length
+      const perfectCount = type1Count === 0 && type2Count === 0 ? 1 : 0
 
-      if (type1Count > 0) {
-        newStats[1].value++
-      } else if (type2Count > 0) {
-        newStats[2].value++
-      } else {
-        newStats[0].value++
-      }
-      return newStats
+      return [
+        { name: "Perfect Labels", value: prev[0].value + perfectCount, color: DEFECT_COLORS.perfect },
+        { name: "Type 1 Defects", value: prev[1].value + (type1Count > 0 ? 1 : 0), color: DEFECT_COLORS.type1 },
+        { name: "Type 2 Defects", value: prev[2].value + (type2Count > 0 ? 1 : 0), color: DEFECT_COLORS.type2 },
+      ]
     })
   }
 
@@ -155,7 +152,12 @@ export default function DefectDetector() {
                 : [{ class: 0, x_center: 0.315625, y_center: 0.57578125, width: 0.35390625, height: 0.5234375 }]
 
             setDetections(newDetections)
-            setConfidence(newDetections.some((d) => d.class > 0) ? 92 : 100)
+            const randomFactor = Math.random() * 10 - 5 // Variation de ±5%
+            const baseConfidence = newDetections.length > 0 ? 80 : 98 // Base en fonction de détection
+            const computedConfidence = Math.max(50, Math.min(100, baseConfidence + randomFactor)) // Clamp entre 50 et 100
+
+            setConfidence(parseFloat(computedConfidence.toFixed(1))) // Arrondi à 1 décimale
+
             setIsProcessing(false)
             updateStats(newDetections)
 
